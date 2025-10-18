@@ -3,7 +3,7 @@
 # This file is a part of < https://github.com/TeamUltroid/Ultroid/ >
 # PLease read the GNU Affero General Public License in <https://www.github.com/TeamUltroid/Ultroid/blob/main/LICENSE/>.
 
-FROM python:3.11-alpine
+FROM python:3.12-alpine
 
 # Install basic system dependencies
 RUN apk add --no-cache ffmpeg git bash curl build-base libffi-dev openssl-dev
