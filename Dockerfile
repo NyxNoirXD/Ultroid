@@ -3,46 +3,52 @@
 # This file is a part of < https://github.com/TeamUltroid/Ultroid/ >
 # Please read the GNU Affero General Public License in <https://www.github.com/TeamUltroid/Ultroid/blob/main/LICENSE/>.
 
-ARG PYTHON_VERSION=3.12
-FROM python:${PYTHON_VERSION}-alpine
+FROM python:3.12-slim AS builder
 
-# Set the working directory early
+# 1. Install build-time dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        git \
+        build-essential \
+        libffi-dev \
+        libssl-dev && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
-# Install all system dependencies in a single layer.
+# Clone Ultroid repository
+RUN git clone --depth=1 https://github.com/TeamUltroid/Ultroid.git .
 
-RUN apk add --no-cache \
-    bash \
-    build-base \
-    curl \
-    ffmpeg \
-    git \
-    libffi-dev \
-    openssl-dev
-
-# Clone the Ultroid repository
-RUN git clone --depth 1 --branch alpine https://github.com/NyxNoirXD/Ultroid .
-
-# Install all Python dependencies in a single RUN command to create a single layer.
-# --no-cache-dir is used to keep the image size down.
+# 2. Install Python dependencies using only the required files.
 RUN pip install --no-cache-dir -U pip setuptools wheel \
     && pip install --no-cache-dir -r requirements.txt \
-    && pip install --no-cache-dir \
-        telethon \
-        gitpython \
-        python-decouple \
-        python-dotenv \
-        telegraph \
-        enhancer \
-        requests \
-        aiohttp \
-        catbox-uploader \
-        cloudscraper
+    && pip install --no-cache-dir -r resources/startup/optional-requirements.txt
 
+# ==============================================================================
 
-# COPY .env .env
+# This stage uses the slim base image and only contains RUNTIME necessities.
+FROM python:3.12-slim
 
-# Set the startup command
+# 3. Install only RUNTIME system dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        ffmpeg \
+        git \
+        bash \
+        curl && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set working directory for the application
+WORKDIR /app
+
+# 4. Copy artifacts from the builder stage
+# Copies the compiled Python libraries and the application source code.
+COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+COPY --from=builder /app /app
+
+# Startup command (CMD is effective for complex, conditional startup logic)
 CMD ["/bin/bash", "-c", "\
     if [ -f .env ]; then set -o allexport; source .env; set +o allexport; fi && \
     if [ \"$SESSION1\" ]; then python3 multi_client.py; else python3 -m pyUltroid; fi \
