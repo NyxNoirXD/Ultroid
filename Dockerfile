@@ -1,34 +1,25 @@
 # Ultroid - UserBot
 FROM python:3.12-slim
 
-# Install system dependencies
+# Working directory (image-local)
+WORKDIR /root/TeamUltroid
+
+# Install system dependencies + clone repo + prepare /data in one RUN
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    ffmpeg git bash curl build-essential libffi-dev libssl-dev \
-    && rm -rf /var/lib/apt/lists/*
+        ffmpeg git bash curl build-essential libffi-dev libssl-dev mediainfo neofetch \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /data/Ultroid \
+    && git clone --depth=1 https://github.com/NyxNoirXD/Ultroid.git /root/TeamUltroid
 
-# Set working directory
-WORKDIR /app
+# Copy installer.sh
+COPY installer.sh /installer.sh
+RUN chmod +x /installer.sh
 
-# Clone Ultroid source
-RUN git clone --depth=1 https://github.com/TeamUltroid/Ultroid.git .
-
-# Install Python dependencies
-RUN pip install --no-cache-dir -U pip setuptools wheel \
-    && pip install --no-cache-dir -r requirements.txt \
-    && pip install --no-cache-dir -r resources/startup/optional-requirements.txt \
-    && pip install --no-cache-dir \
-        telethon gitpython python-decouple python-dotenv telegraph \
-        enhancer requests aiohttp catbox-uploader cloudscraper
-
-# Create a separate folder for persistent data (to be mounted in Kubernetes)
-RUN mkdir -p /data
-
-# Startup command
+# Startup CMD
 CMD ["/bin/bash", "-c", "\
-    mkdir -p /data/Ultroid && \
-    cp -r /app/. /data/Ultroid/ && \
+    cp -r /root/TeamUltroid/. /data/Ultroid/ && \
     cd /data/Ultroid && \
-    if [ -f .env ]; then set -o allexport; source .env; set +o allexport; fi && \
-    python3 -m pyUltroid \
+    bash /installer.sh --dir=/data/Ultroid --no-root && \
+    bash startup \
 "]
