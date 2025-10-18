@@ -9,14 +9,14 @@ DIR="/app"
 while [ $# -gt 0 ]; do
     case "$1" in
     --dir=*)
-        DIR="${1#*=}" || DIR="/app"
+        DIR="${1#*=}" || DIR="/app/Ultroid"
         ;;
     --branch=*)
         # Default branch is set to 'alpine' if the argument is provided but empty, 
         # otherwise we respect the provided value.
         BRANCH="${1#*=}"
         if [ -z "$BRANCH" ]; then
-            BRANCH="alpine"
+            BRANCH="main"
         fi
         ;;
     --env-file=*)
@@ -35,7 +35,7 @@ done
 
 # Set default BRANCH if not already set by arguments
 if [ -z "$BRANCH" ]; then
-    BRANCH="alpine"
+    BRANCH="main"
 fi
 
 # --- Dependency Check and Install ---
