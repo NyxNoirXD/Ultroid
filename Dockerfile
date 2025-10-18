@@ -29,6 +29,6 @@ CMD ["/bin/bash", "-c", "\
     mkdir -p /data/Ultroid && \
     cp -r /root/TeamUltroid/. /data/Ultroid/ && \
     cd /data/Ultroid && \
-    SKIP_PIP=true SKIP_CLONE=true bash /installer.sh --dir=/data/Ultroid --no-root && \
+    SKIP_PIP=true SKIP_CLONE=true bash /installer.sh --dir=/data/Ultroid && \
     if [ \"$SESSION1\" ]; then python3 multi_client.py; else bash startup; fi \
 "]
