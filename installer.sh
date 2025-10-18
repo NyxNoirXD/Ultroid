@@ -59,7 +59,7 @@ check_dependencies() {
         fi
         
         # Check system executables
-        if ! command -v ffmpeg &>/dev/null || ! command -v mediainfo &>/dev/null || ! command -v neofetch &>/dev/null || ! command -v git &>/dev/null; then
+        if ! command -v ffmpeg &>/dev/null || ! command -v mediainfo &>/dev/null || ! command -v git &>/dev/null; then
             echo -e "Some critical system dependencies (ffmpeg, mediainfo, neofetch, git) aren't installed. Please install them." >&2
             exit 1
         fi
