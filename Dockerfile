@@ -27,7 +27,6 @@ RUN git clone --depth 1 --branch alpine https://github.com/NyxNoirXD/Ultroid .
 # --no-cache-dir is used to keep the image size down.
 RUN pip install --no-cache-dir -U pip setuptools wheel \
     && pip install --no-cache-dir -r requirements.txt \
-    && pip install --no-cache-dir -r resources/startup/optional-requirements.txt \
     && pip install --no-cache-dir \
         telethon \
         gitpython \
