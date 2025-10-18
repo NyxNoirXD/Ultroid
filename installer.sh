@@ -239,8 +239,6 @@ main() {
     # Run setup steps
     check_dependencies
     check_python
-    clone_repo
-    install_requirements
     railways_dep
     dep_install
     misc_install
