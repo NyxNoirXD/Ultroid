@@ -25,7 +25,6 @@ RUN pip install --no-cache-dir -U pip setuptools wheel \
     && pip install --no-cache-dir -r requirements.txt \
     && pip install --no-cache-dir -r resources/startup/optional-requirements.txt
 
-# ==============================================================================
 
 # This stage uses the slim base image and only contains RUNTIME necessities.
 FROM python:3.12-slim
