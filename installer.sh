@@ -113,103 +113,99 @@ check_python() {
     fi
 }
 
-if [ "$SKIP_CLONE" != true ]; then
-    # --- Git and Cloning Functions ---
-    clone_repo() {
-        # check if directory exists
-        if [ -d "$DIR" ] && [ -d "$DIR/.git" ]; then
-            echo -e "Updating Ultroid ${BRANCH}... "
-            cd "$DIR" || { echo "Failed to change directory to $DIR"; exit 1; }
+# --- Git and Cloning Functions ---
+clone_repo() {
+    # check if directory exists
+    if [ -d "$DIR" ] && [ -d "$DIR/.git" ]; then
+        echo -e "Updating Ultroid ${BRANCH}... "
+        cd "$DIR" || { echo "Failed to change directory to $DIR"; exit 1; }
+        git pull
+        
+        currentbranch="$(git rev-parse --abbrev-ref HEAD)"
+        if [ "$currentbranch" != "$BRANCH" ]; then
+            echo -e "Switching to branch ${BRANCH}... "
+            git checkout "$BRANCH"
+        fi
+        
+        # Update addons if the folder exists and is a git repo
+        if [ -d "addons" ] && [ -d "addons/.git" ]; then
+            cd addons
             git pull
-            
-            currentbranch="$(git rev-parse --abbrev-ref HEAD)"
-            if [ "$currentbranch" != "$BRANCH" ]; then
-                echo -e "Switching to branch ${BRANCH}... "
-                git checkout "$BRANCH"
-            fi
-            
-            # Update addons if the folder exists and is a git repo
-            if [ -d "addons" ] && [ -d "addons/.git" ]; then
-                cd addons
-                git pull
-            fi
-            return
-        else
-            # Initial cloning logic
-            if [ -d "$DIR" ]; then
-                # If directory exists but is not a git repo, clean it up
-                echo "Directory $DIR exists but is not a Git repository. Removing and cloning fresh."
-                rm -rf "$DIR"
-            fi
-            
-            mkdir -p "$DIR"
-            echo -e "Cloning Ultroid ${BRANCH}... "
-            git clone -b "$BRANCH" --depth 1 "$REPO" "$DIR" || { echo "Git clone failed. Check if branch '$BRANCH' exists."; exit 1; }
         fi
-    }
-fi
+        return
+    else
+        # Initial cloning logic
+        if [ -d "$DIR" ]; then
+            # If directory exists but is not a git repo, clean it up
+            echo "Directory $DIR exists but is not a Git repository. Removing and cloning fresh."
+            rm -rf "$DIR"
+        fi
+        
+        mkdir -p "$DIR"
+        echo -e "Cloning Ultroid ${BRANCH}... "
+        git clone -b "$BRANCH" --depth 1 "$REPO" "$DIR" || { echo "Git clone failed. Check if branch '$BRANCH' exists."; exit 1; }
+    fi
+}
 
-if [ "$SKIP_PIP" != true ]; then
-    # --- Python Installation Functions ---
-    install_requirements() {
-        pip3 install -q --upgrade pip
-        echo -e "\n\nInstalling main requirements... "
-        # Using `set +e` temporarily to allow a failure if requirements.txt doesn't exist yet (e.g., failed clone)
-        set +e
-        pip3 install -q --no-cache-dir -r "$DIR/requirements.txt"
-        pip3 install -q --no-cache-dir -r "$DIR/resources/startup/optional-requirements.txt"
-        set -e
-    }
-    
-    # Other dependency functions remain largely the same, using pip3
-    railways_dep() {
-        if [ "$RAILWAY_STATIC_URL" ]; then
-            echo -e "Installing YouTube dependency... "
-            pip3 install -q yt-dlp
+# --- Python Installation Functions ---
+install_requirements() {
+    pip3 install -q --upgrade pip
+    echo -e "\n\nInstalling main requirements... "
+    # Using `set +e` temporarily to allow a failure if requirements.txt doesn't exist yet (e.g., failed clone)
+    set +e
+    pip3 install -q --no-cache-dir -r "$DIR/requirements.txt"
+    pip3 install -q --no-cache-dir -r "$DIR/resources/startup/optional-requirements.txt"
+    set -e
+}
+
+# Other dependency functions remain largely the same, using pip3
+railways_dep() {
+    if [ "$RAILWAY_STATIC_URL" ]; then
+        echo -e "Installing YouTube dependency... "
+        pip3 install -q yt-dlp
+    fi
+}
+
+misc_install() {
+    if [ "$SETUP_PLAYWRIGHT" ]
+    then
+        echo -e "Installing playwright."
+        pip3 install playwright
+        playwright install
+    fi
+    if [ "$OKTETO_TOKEN" ]; then
+        echo -e "Installing Okteto-CLI... "
+        curl https://get.okteto.com -sSfL | sh
+    elif [ "$VCBOT" ]; then
+        if [ -d "$DIR/vcbot" ]; then
+            cd "$DIR/vcbot"
+            git pull
+        else
+            echo -e "Cloning VCBOT.."
+            git clone https://github.com/TeamUltroid/VcBot "$DIR/vcbot"
         fi
-    }
-    
-    misc_install() {
-        if [ "$SETUP_PLAYWRIGHT" ]
-        then
-            echo -e "Installing playwright."
-            pip3 install playwright
-            playwright install
-        fi
-        if [ "$OKTETO_TOKEN" ]; then
-            echo -e "Installing Okteto-CLI... "
-            curl https://get.okteto.com -sSfL | sh
-        elif [ "$VCBOT" ]; then
-            if [ -d "$DIR/vcbot" ]; then
-                cd "$DIR/vcbot"
-                git pull
-            else
-                echo -e "Cloning VCBOT.."
-                git clone https://github.com/TeamUltroid/VcBot "$DIR/vcbot"
-            fi
-            # CRITICAL: `av` is compiled from source on Alpine, requiring the build dependencies
-            # installed in check_dependencies.
-            pip3 install pytgcalls==3.0.0.dev23
-            pip3 install av -q --no-binary av
-        fi
-    }
-    
-    dep_install() {
-        echo -e "\n\nInstalling DB Requirement..."
-        if [ "$MONGO_URI" ]; then
-            echo -e "  Installing MongoDB Requirements..."
-            pip3 install -q pymongo[srv]
-        elif [ "$DATABASE_URL" ]; then
-            echo -e "  Installing PostgreSQL Requirements..."
-            # CRITICAL: psycopg2-binary requires build dependencies on Alpine/many Linux systems.
-            # This is why 'build-base' and 'python3-dev' were added in check_dependencies.
-            pip3 install -q psycopg2-binary
-        elif [ "$REDIS_URI" ]; then
-            echo -e "  Installing Redis Requirements..."
-            pip3 install -q redis hiredis
-        fi
-    }
-fi
+        # CRITICAL: `av` is compiled from source on Alpine, requiring the build dependencies
+        # installed in check_dependencies.
+        pip3 install pytgcalls==3.0.0.dev23
+        pip3 install av -q --no-binary av
+    fi
+}
+
+dep_install() {
+    echo -e "\n\nInstalling DB Requirement..."
+    if [ "$MONGO_URI" ]; then
+        echo -e "  Installing MongoDB Requirements..."
+        pip3 install -q pymongo[srv]
+    elif [ "$DATABASE_URL" ]; then
+        echo -e "  Installing PostgreSQL Requirements..."
+        # CRITICAL: psycopg2-binary requires build dependencies on Alpine/many Linux systems.
+        # This is why 'build-base' and 'python3-dev' were added in check_dependencies.
+        pip3 install -q psycopg2-binary
+    elif [ "$REDIS_URI" ]; then
+        echo -e "  Installing Redis Requirements..."
+        pip3 install -q redis hiredis
+    fi
+}
 
 # --- Main Execution Flow ---
 main() {
