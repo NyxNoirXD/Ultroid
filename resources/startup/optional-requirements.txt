@@ -16,6 +16,7 @@ lottie
 lxml
 numpy>=1.21.2
 oauth2client
+opencv-python-headless
 pillow>=9.0.0
 profanitydetector
 psutil
@@ -30,4 +31,3 @@ tgcrypto
 youtube-search-python
 yt-dlp
 # -------------------------------------------------------#
-
