@@ -24,7 +24,7 @@ RUN apk add --no-cache \
     openssl-dev
 
 # Clone the Ultroid repository
-RUN git clone --depth=1 https://github.com/TeamUltroid/Ultroid.git .
+RUN git clone --depth 1 --branch alpine https://github.com/NyxNoirXD/Ultroid .
 
 # Install all Python dependencies in a single RUN command to create a single layer.
 # --no-cache-dir is used to keep the image size down.
