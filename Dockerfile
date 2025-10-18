@@ -27,7 +27,7 @@ RUN mkdir -p /data
 # Startup command
 CMD ["/bin/bash", "-c", "\
     mkdir -p /data/Ultroid && \
-    cp -r /app/* /data/Ultroid/ && \
+    cp -r /app/. /data/Ultroid/ && \
     cd /data/Ultroid && \
     if [ -f .env ]; then set -o allexport; source .env; set +o allexport; fi && \
     python3 -m pyUltroid \
