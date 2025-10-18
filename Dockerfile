@@ -7,7 +7,7 @@ WORKDIR /root/TeamUltroid
 # Install system dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        ffmpeg git bash curl neofetch build-essential libffi-dev libssl-dev mediainfo \
+        ffmpeg git bash curl build-essential libffi-dev libssl-dev mediainfo \
     && rm -rf /var/lib/apt/lists/*
 
 # Clone main Ultroid repo + addons/plugins at build time
