@@ -3,18 +3,29 @@
 # This file is a part of < https://github.com/TeamUltroid/Ultroid/ >
 # PLease read the GNU Affero General Public License in <https://www.github.com/TeamUltroid/Ultroid/blob/main/LICENSE/>.
 
-FROM theteamultroid/ultroid:main
+FROM python:3.11-alpine
 
-# set timezone
-ENV TZ=Asia/Kolkata
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+# Install basic system dependencies
+RUN apk add --no-cache ffmpeg git bash curl build-base libffi-dev openssl-dev
 
-COPY installer.sh .
+# Set working directory
+WORKDIR /app
 
-RUN bash installer.sh
+# Clone Ultroid repository
+RUN git clone --depth=1 https://github.com/TeamUltroid/Ultroid.git .
 
-# changing workdir
-WORKDIR "/root/TeamUltroid"
+# Install Python dependencies
+RUN pip install --no-cache-dir -U pip setuptools wheel \
+    && pip install --no-cache-dir -r requirements.txt \
+    && pip install --no-cache-dir -r resources/startup/optional-requirements.txt \
+    && pip install --no-cache-dir \
+        telethon gitpython python-decouple python-dotenv telegraph \
+        enhancer requests aiohttp catbox-uploader cloudscraper
 
-# start the bot.
-CMD ["bash", "startup"]
+# COPY .env .env
+
+# Startup
+CMD ["/bin/bash", "-c", "\
+    if [ -f .env ]; then set -o allexport; source .env; set +o allexport; fi && \
+    if [ \"$SESSION1\" ]; then python3 multi_client.py; else python3 -m pyUltroid; fi \
+"]
