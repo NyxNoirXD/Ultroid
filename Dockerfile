@@ -18,26 +18,7 @@ RUN git clone --depth=1 https://github.com/NyxNoirXD/Ultroid.git /root/TeamUltro
 # Install Python dependencies at build time
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
     pip install --no-cache-dir -r /root/TeamUltroid/requirements.txt && \
-    pip install --no-cache-dir -r /root/TeamUltroid/resources/startup/optional-requirements.txt && \
-    pip install --no-cache-dir \
-        telethon \
-        gitpython \
-        python-decouple \
-        python-dotenv \
-        telegraph \
-        enhancer \
-        requests \
-        aiohttp \
-        catbox-uploader \
-        cloudscraper \
-        pytgcalls==3.0.0.dev24 \
-        av \
-        yt-dlp \
-        redis \
-        hiredis \
-        pymongo[srv] \
-        psycopg2-binary \
-        playwright
+    pip install --no-cache-dir -r /root/TeamUltroid/resources/startup/optional-requirements.txt
 
 # Copy installer.sh for runtime environment handling only
 COPY installer.sh /installer.sh
