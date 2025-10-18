@@ -1,41 +1,59 @@
 # Ultroid - UserBot
 # Copyright (C) 2021-2025 TeamUltroid
 # This file is a part of < https://github.com/TeamUltroid/Ultroid/ >
-# PLease read the GNU Affero General Public License in <https://www.github.com/TeamUltroid/Ultroid/blob/main/LICENSE/>.
+# Please read the GNU Affero General Public License in <https://www.github.com/TeamUltroid/Ultroid/blob/main/LICENSE/>.
 
-FROM python:3.12-slim
+# --- Build Stage ---
+# Use a specific version for reproducibility.
+# Use a build-focused image that includes development tools.
+FROM python:3.12-alpine AS builder
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    ffmpeg \
-    git \
-    bash \
-    curl \
-    build-essential \
-    libffi-dev \
-    libssl-dev && \
-    apt-get clean && \
-    # Clean up
-    rm -rf /var/lib/apt/lists/*
-
-# Set working directory
+# Set the working directory
 WORKDIR /app
 
-# Clone Ultroid repository
+# Install build-time dependencies
+# build-base, libffi-dev, and openssl-dev are only needed to build the python packages
+RUN apk add --no-cache git curl build-base libffi-dev openssl-dev
+
+# Clone the repository first to leverage Docker layer caching
 RUN git clone --depth=1 https://github.com/TeamUltroid/Ultroid.git .
 
-# Install Python dependencies
+# Create a virtual environment for clean dependency management
+RUN python -m venv /opt/venv
+
+# Activate the virtual environment for subsequent commands
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Install Python dependencies into the virtual environment
+# Combine pip installs into a single layer to reduce image size
 RUN pip install --no-cache-dir -U pip setuptools wheel \
     && pip install --no-cache-dir -r requirements.txt \
-    && pip install --no-cache-dir -r resources/startup/optional-requirements.txt \
     && pip install --no-cache-dir \
         telethon gitpython python-decouple python-dotenv telegraph \
         enhancer requests aiohttp catbox-uploader cloudscraper
 
-# COPY .env .env
+# --- Final Stage ---
+# Use a slim base image for the final product
+FROM python:3.12-alpine
 
-# Startup
+# Set the working directory
+WORKDIR /app
+
+# Install ONLY runtime dependencies
+RUN apk add --no-cache ffmpeg bash
+
+# Copy the virtual environment from the builder stage
+COPY --from=builder /opt/venv /opt/venv
+
+# Copy the application code from the builder stage
+COPY --from=builder /app /app
+
+# Activate the virtual environment for the final container
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Set the startup command
 CMD ["/bin/bash", "-c", "\
     if [ -f .env ]; then set -o allexport; source .env; set +o allexport; fi && \
     if [ \"$SESSION1\" ]; then python3 multi_client.py; else python3 -m pyUltroid; fi \
 "]
+
