@@ -17,7 +17,6 @@ RUN git clone --depth=1 https://github.com/TeamUltroid/Ultroid.git .
 # Install Python dependencies
 RUN pip install --no-cache-dir -U pip setuptools wheel \
     && pip install --no-cache-dir -r requirements.txt \
-    && pip install --no-cache-dir -r resources/startup/optional-requirements.txt \
     && pip install --no-cache-dir \
         telethon gitpython python-decouple python-dotenv telegraph \
         enhancer requests aiohttp catbox-uploader cloudscraper
