@@ -4,39 +4,40 @@ FROM python:3.12-slim
 # Set timezone and PATH
 ENV TZ=Asia/Kolkata
 ENV PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    git curl bash ffmpeg mediainfo build-essential libffi-dev libssl-dev tzdata \
-    && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
+# Install basic system dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    ffmpeg \
+    git \
+    bash \
+    curl \
+    build-essential \
+    libffi-dev \
+    libssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Install neofetch manually
 RUN curl -fsSL https://raw.githubusercontent.com/dylanaraps/neofetch/master/neofetch -o /usr/local/bin/neofetch \
     && chmod +x /usr/local/bin/neofetch
 
-# Clone Ultroid repo
-RUN git clone https://github.com/TeamUltroid/Ultroid /root/TeamUltroid
-
-# Copy custom installer.sh if you have one
-COPY installer.sh /root/TeamUltroid/
-
 # Set working directory
-WORKDIR /root/TeamUltroid
+WORKDIR /app
 
-# Ensure startup is executable
-RUN chmod +x startup
+# Clone Ultroid repository
+RUN git clone --depth=1 https://github.com/TeamUltroid/Ultroid.git .
 
-# Add entrypoint to run installer.sh on first start, then startup
-RUN echo '#!/usr/bin/env bash\n\
-if [ ! -f /.installed ]; then\n\
-    echo "Running installer.sh..."\n\
-    bash installer.sh --no-root\n\
-    touch /.installed\n\
-fi\n\
-echo "Starting Ultroid..."\n\
-exec bash startup' > /usr/local/bin/entrypoint.sh \
-    && chmod +x /usr/local/bin/entrypoint.sh
+# Install Python dependencies
+RUN pip install --no-cache-dir -U pip setuptools wheel \
+    && pip install --no-cache-dir -r requirements.txt \
+    && pip install --no-cache-dir -r resources/startup/optional-requirements.txt \
+    && pip install --no-cache-dir \
+        telethon gitpython python-decouple python-dotenv telegraph \
+        enhancer requests aiohttp catbox-uploader cloudscraper
 
-# Use entrypoint to handle first-run installer
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+# COPY .env .env
+
+# Startup
+CMD ["/bin/bash", "-c", "\
+    if [ -f .env ]; then set -o allexport; source .env; set +o allexport; fi && \
+    if [ \"$SESSION1\" ]; then python3 multi_client.py; else python3 -m pyUltroid; fi \
+"]
