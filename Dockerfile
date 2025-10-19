@@ -8,9 +8,13 @@ FROM python:3.12-slim
 # Set timezone
 ENV TZ=Asia/Colombo
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    git curl bash ffmpeg neofetch build-essential libffi-dev libssl-dev tzdata \
+    git curl bash ffmpeg build-essential libffi-dev libssl-dev tzdata \
     && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
     && rm -rf /var/lib/apt/lists/*
+
+# Install neofetch manually
+RUN curl -fsSL https://raw.githubusercontent.com/dylanaraps/neofetch/master/neofetch -o /usr/local/bin/neofetch \
+    && chmod +x /usr/local/bin/neofetch
 
 # Clone Ultroid repo
 RUN git clone https://github.com/TeamUltroid/Ultroid /root/TeamUltroid
