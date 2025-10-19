@@ -1,4 +1,4 @@
-# Ultroid - UserBot (Slim + Neofetch)
+# Ultroid - UserBot (Docker Production Ready)
 FROM python:3.12-slim
 
 # Set timezone and PATH
@@ -18,7 +18,7 @@ RUN curl -fsSL https://raw.githubusercontent.com/dylanaraps/neofetch/master/neof
 # Clone Ultroid repo
 RUN git clone https://github.com/TeamUltroid/Ultroid /root/TeamUltroid
 
-# Copy installer.sh (if you have a custom one)
+# Copy custom installer.sh if you have one
 COPY installer.sh /root/TeamUltroid/
 
 # Set working directory
@@ -27,4 +27,16 @@ WORKDIR /root/TeamUltroid
 # Ensure startup is executable
 RUN chmod +x startup
 
-CMD ["bash"]
+# Add entrypoint to run installer.sh on first start, then startup
+RUN echo '#!/usr/bin/env bash\n\
+if [ ! -f /.installed ]; then\n\
+    echo "Running installer.sh..."\n\
+    bash installer.sh --no-root\n\
+    touch /.installed\n\
+fi\n\
+echo "Starting Ultroid..."\n\
+exec bash startup' > /usr/local/bin/entrypoint.sh \
+    && chmod +x /usr/local/bin/entrypoint.sh
+
+# Use entrypoint to handle first-run installer
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
