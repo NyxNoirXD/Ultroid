@@ -1,9 +1,7 @@
 [phases.setup]
-# Install system dependencies
-packages = ["ffmpeg" "git" "bash" "neofetch" "curl" "build-essential" "libffi-dev" "libssl-dev" "python3-dev"]
+packages = ["ffmpeg", "git", "bash", "curl", "build-essential", "libffi-dev", "libssl-dev", "python3-dev"]
 
 [phases.install]
-# Clone Ultroid repository and install Python dependencies
 commands = [
   "mkdir -p /app",
   "git clone --depth=1 https://github.com/TeamUltroid/Ultroid.git /app",
@@ -14,15 +12,10 @@ commands = [
 ]
 
 [phases.start]
-# Persist source and sessions, loop startup
 commands = [
   "mkdir -p /data/Ultroid",
-  "cp -rn /app/. /data/Ultroid/",   # copy source if first run
+  "cp -rn /app/. /data/Ultroid/",
   "cd /data/Ultroid",
   "export PYULT_SESSION=/data/Ultroid/pyUltroid.session",
-  "while true; do",
-  "  python3 -m pyUltroid || true",
-  "  echo 'Bot exited, restarting in 10s...'",
-  "  sleep 10",
-  "done"
+  "while true; do python3 -m pyUltroid || true; echo 'Bot exited, restarting in 10s...'; sleep 10; done"
 ]
