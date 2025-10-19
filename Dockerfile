@@ -1,36 +1,26 @@
-# ------------------------------------------
-# Ultroid - UserBot (Custom Build)
-# ------------------------------------------
+# Ultroid - UserBot
+# Copyright (C) 2021-2025 TeamUltroid
+# This file is a part of < https://github.com/TeamUltroid/Ultroid/ >
+# PLease read the GNU Affero General Public License in <https://www.github.com/TeamUltroid/Ultroid/blob/main/LICENSE/>.
 
-FROM python:3.13-slim
+FROM python:3.12-slim
 
-# Environment setup
-ENV DEBIAN_FRONTEND=noninteractive
+# Set timezone
 ENV TZ=Asia/Colombo
-ENV PATH="/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-
-# Timezone setup
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-
-# Install dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    git curl bash ffmpeg build-essential libffi-dev libssl-dev python3-dev \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    git curl bash ffmpeg neofetch build-essential libffi-dev libssl-dev tzdata \
+    && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
+    && rm -rf /var/lib/apt/lists/*
 
-# Clone Ultroid source
+# Clone Ultroid repo
 RUN git clone https://github.com/TeamUltroid/Ultroid /root/TeamUltroid
 
-# Copy local installer script into container
-COPY installer.sh /root/TeamUltroid/installer.sh
+# Copy installer.sh into the repo root (if you have it locally)
+COPY installer.sh /root/TeamUltroid/
 
-# Set working directory
+# Run installer
 WORKDIR /root/TeamUltroid
+RUN bash installer.sh && chmod +x startup
 
-# Run the installer
-RUN bash installer.sh
-
-# Make sure startup script is executable
-RUN chmod +x startup
-
-# Default command — start Ultroid
+# Default command to start Ultroid
 CMD ["bash", "startup"]
