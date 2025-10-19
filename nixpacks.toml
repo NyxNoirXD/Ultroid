@@ -1,47 +1,28 @@
 [phases.setup]
-packages = [
-  "python3",
-  "python3Packages.pip",
-  "git",
-  "bash",
-  "curl",
-  "ffmpeg",
-  "mediainfo",
-  "neofetch",
-  "libffi",
-  "openssl",
-  "buildPackages.gcc"
-]
+# Install system dependencies
+packages = ["ffmpeg" "git" "bash" "neofetch" "curl" "build-essential" "libffi-dev" "libssl-dev" "python3-dev"]
 
 [phases.install]
-run = """
-mkdir -p /app/Ultroid &&
-git clone --depth=1 https://github.com/TeamUltroid/Ultroid.git /app/Ultroid
-"""
-
-[phases.build]
-run = """
-mkdir -p /data/Ultroid &&
-if [ ! -f /.installed ]; then
-  cp -r /app/Ultroid/. /data/Ultroid &&
-  touch /.installed
-fi &&
-python3 -m pip install --upgrade pip setuptools wheel &&
-python3 -m pip install --no-cache-dir -r /app/Ultroid/requirements.txt &&
-python3 -m pip install --no-cache-dir -r /app/Ultroid/resources/startup/optional-requirements.txt &&
-python3 -m pip install --no-cache-dir telethon gitpython python-decouple python-dotenv telegraph enhancer requests aiohttp catbox-uploader cloudscraper
-"""
+# Clone Ultroid repository and install Python dependencies
+commands = [
+  "mkdir -p /app",
+  "git clone --depth=1 https://github.com/TeamUltroid/Ultroid.git /app",
+  "pip install --upgrade pip setuptools wheel",
+  "pip install -r /app/requirements.txt",
+  "pip install -r /app/resources/startup/optional-requirements.txt",
+  "pip install telethon gitpython python-decouple python-dotenv telegraph enhancer requests aiohttp catbox-uploader cloudscraper"
+]
 
 [phases.start]
-run = """
-cd /data/Ultroid &&
-if [ -f .env ]; then
-  set -o allexport
-  source .env
-  set +o allexport
-fi &&
-python3 -m pyUltroid
-"""
-
-[metadata]
-name = "ultroid-sevalla"
+# Persist source and sessions, loop startup
+commands = [
+  "mkdir -p /data/Ultroid",
+  "cp -rn /app/. /data/Ultroid/",   # copy source if first run
+  "cd /data/Ultroid",
+  "export PYULT_SESSION=/data/Ultroid/pyUltroid.session",
+  "while true; do",
+  "  python3 -m pyUltroid || true",
+  "  echo 'Bot exited, restarting in 10s...'",
+  "  sleep 10",
+  "done"
+]
