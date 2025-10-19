@@ -1,30 +1,34 @@
-# Ultroid - UserBot
+# Ultroid - UserBot (Custom Slim Build)
 # Copyright (C) 2021-2025 TeamUltroid
-# This file is a part of < https://github.com/TeamUltroid/Ultroid/ >
-# PLease read the GNU Affero General Public License in <https://www.github.com/TeamUltroid/Ultroid/blob/main/LICENSE/>.
+# https://github.com/TeamUltroid/Ultroid
 
 FROM python:3.12-slim
 
-# Set timezone
+# Set timezone and PATH
 ENV TZ=Asia/Colombo
+ENV PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+
+# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    git curl bash ffmpeg build-essential libffi-dev libssl-dev tzdata \
+    git curl bash ffmpeg mediainfo build-essential libffi-dev libssl-dev tzdata \
     && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
     && rm -rf /var/lib/apt/lists/*
 
-# Install neofetch manually
+# Install neofetch
 RUN curl -fsSL https://raw.githubusercontent.com/dylanaraps/neofetch/master/neofetch -o /usr/local/bin/neofetch \
     && chmod +x /usr/local/bin/neofetch
 
 # Clone Ultroid repo
 RUN git clone https://github.com/TeamUltroid/Ultroid /root/TeamUltroid
 
-# Copy installer.sh into the repo root (if you have it locally)
+# Copy local installer.sh (if you have it)
 COPY installer.sh /root/TeamUltroid/
 
-# Run installer
+# Set working directory
 WORKDIR /root/TeamUltroid
+
+# Run installer and ensure startup is executable
 RUN bash installer.sh && chmod +x startup
 
-# Default command to start Ultroid
+# Start Ultroid
 CMD ["bash", "startup"]
