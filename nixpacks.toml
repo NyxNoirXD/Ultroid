@@ -1,40 +1,31 @@
-# ==========================
-# Ultroid - UserBot for Sevalla (Nixpacks, Persistent)
-# ==========================
-
 [phases.setup]
-# System dependencies required by Ultroid
 packages = [
-  "python3"
-  "python3Packages.pip"
-  "git"
-  "bash"
-  "curl"
-  "ffmpeg"
-  "mediainfo"
-  "neofetch"
-  "libffi"
-  "openssl"
+  "python3",
+  "python3Packages.pip",
+  "git",
+  "bash",
+  "curl",
+  "ffmpeg",
+  "mediainfo",
+  "neofetch",
+  "libffi",
+  "openssl",
   "buildPackages.gcc"
 ]
 
 [phases.install]
-# Clone Ultroid repo into /app (read-only source)
 run = """
 mkdir -p /app/Ultroid &&
 git clone --depth=1 https://github.com/TeamUltroid/Ultroid.git /app/Ultroid
 """
 
 [phases.build]
-# Create persistent directory /data/Ultroid
 run = """
 mkdir -p /data/Ultroid &&
-# Copy code from /app to /data only if first run
 if [ ! -f /.installed ]; then
   cp -r /app/Ultroid/. /data/Ultroid &&
   touch /.installed
 fi &&
-# Install Python dependencies globally
 python3 -m pip install --upgrade pip setuptools wheel &&
 python3 -m pip install --no-cache-dir -r /app/Ultroid/requirements.txt &&
 python3 -m pip install --no-cache-dir -r /app/Ultroid/resources/startup/optional-requirements.txt &&
@@ -42,7 +33,6 @@ python3 -m pip install --no-cache-dir telethon gitpython python-decouple python-
 """
 
 [phases.start]
-# Source .env if present and run Ultroid from /data/Ultroid
 run = """
 cd /data/Ultroid &&
 if [ -f .env ]; then
