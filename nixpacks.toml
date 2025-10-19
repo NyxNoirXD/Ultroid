@@ -1,0 +1,50 @@
+# ==========================
+# Ultroid - UserBot for Sevalla (Nixpacks)
+# ==========================
+
+[phases.setup]
+# Install system dependencies
+packages = [
+  "python3"
+  "python3Packages.pip"
+  "git"
+  "bash"
+  "curl"
+  "ffmpeg"
+  "mediainfo"
+  "neofetch"
+  "libffi"
+  "openssl"
+  "buildPackages.gcc"
+]
+
+[phases.install]
+# Clone Ultroid repo into /app/Ultroid
+run = """
+mkdir -p /app/Ultroid
+git clone --depth=1 https://github.com/TeamUltroid/Ultroid.git /app/Ultroid
+"""
+
+[phases.build]
+# Install Python dependencies
+run = """
+python3 -m pip install --upgrade pip setuptools wheel
+python3 -m pip install --no-cache-dir -r /app/Ultroid/requirements.txt
+python3 -m pip install --no-cache-dir -r /app/Ultroid/resources/startup/optional-requirements.txt
+python3 -m pip install --no-cache-dir telethon gitpython python-decouple python-dotenv telegraph enhancer requests aiohttp catbox-uploader cloudscraper
+"""
+
+[phases.start]
+# Copy .env if it exists and run Ultroid
+run = """
+cd /app/Ultroid
+if [ -f .env ]; then
+  set -o allexport
+  source .env
+  set +o allexport
+fi
+python3 -m pyUltroid
+"""
+
+[metadata]
+name = "ultroid-sevalla"
