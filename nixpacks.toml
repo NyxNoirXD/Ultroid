@@ -16,6 +16,6 @@ commands = [
   "mkdir -p /data/Ultroid",
   "cp -rn /app/. /data/Ultroid/",
   "cd /data/Ultroid",
-  "export PYULT_SESSION=/data/Ultroid/pyUltroid.session",
+  "export SESSION=/data/Ultroid/pyUltroid.session",
   "while true; do python3 -m pyUltroid || true; echo 'Bot exited, restarting in 10s...'; sleep 10; done"
 ]
